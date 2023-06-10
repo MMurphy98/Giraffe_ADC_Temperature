@@ -1,4 +1,4 @@
-module Giraffe_ADC #(
+module Giraffe #(
     // Parameters for UART
     parameter UART_BAUDRATE = 256000,            // Maximum: 256000
     parameter UART_FREQ = 50_000_000,
@@ -7,10 +7,11 @@ module Giraffe_ADC #(
     parameter UART_NUM_STOP = 1,
     
     // Number of Sub-ADC bit
-    parameter N_bit = 6,
+    parameter NUM_bit = 6,
 
     // Number of Sampled Points
-    parameter NUM_Sampled = 102400
+    parameter NUM_Sampled = 102400,
+    parameter NUM_Calibration = 1000
 )
 (
     //  FPGA Board
@@ -21,7 +22,7 @@ module Giraffe_ADC #(
 
 //    input                   system_ena,
     output	[3:0]	        LED_out,
-    output [17:0]           LED_cnt_send,
+    output [17:0]           LED_cnt_received,
     output [3:0]            LED_state,
 
     // UART TX
@@ -29,15 +30,15 @@ module Giraffe_ADC #(
 	input					rxfM,
 	 
     // Control the ADC
-    output                  rstn_adc,
+    output                  adc_rstn,
     output                  clk_adc,
 	output					clk_ultra,
-    output                  calib_ena_adc,
+    output                  adc_calib_ena,
 	output				    adc_ena,
-    output  [8:0]           NOWA_adc,
+    output  [8:0]           adc_NOWA,
     input                   adc_ack,
     input                   adc_ack_sub,
-    input   [N_bit-1:0]     dout_adc,
+    input   [NUM_bit-1:0]   adc_dout,
 
     // To caparray
     output                  cap_rstn
@@ -46,7 +47,7 @@ module Giraffe_ADC #(
 // ****************** Clock Buffer of the whole system ******************
     PLL_50M Inst_PLL (
         .areset                 (~nrst),
-        .locked                 (sys_locked)
+        .locked                 (sys_locked),
         .inclk0                 (clk_50M),
         .c0                     (clk_adc),      // 50MHz
         .c1					    (clk_uart)      // 50MHz
@@ -59,37 +60,69 @@ module Giraffe_ADC #(
         .FREQ                   (UART_FREQ), 
         .N_start                (UART_NUM_START), 
         .N_data                 (UART_NUM_DATA), 
-        .N_stop                 (UART_NUM_STOP)) 
+        .N_stop                 (UART_NUM_STOP)
+    ) 
 	u_uart_tx (
         .clk                    (clk_uart),
         .nrst                   (nrst),
-        .wreq	                (uart_wreq),
         .tx		                (tx2M),
+        .wreq	                (uart_wreq),
         .wdata	                (uart_wdata),
         .rdy                    (uart_rdy)
     );
 
+    // reset whole ADC system via rdata
     uart_rx #(
 		.BAUDRATE               (UART_BAUDRATE), 
 		.FREQ                   (UART_FREQ), 
 		.N_start                (UART_NUM_START), 
 		.N_data                 (UART_NUM_DATA), 
-		.N_stop                 (UART_NUM_STOP))
+		.N_stop                 (UART_NUM_STOP)
+    )
 	Inst_uart_rx (
         .clk                    (clk_uart),
         .nrst                   (nrst),
         .rx                     (rxfM),
-        .rdata                  (rdata),
-        .vld	                (vld)           
-        // reset whole A/D system via UART host;
+        .rdata                  (uart_rdata),
+        .vld	                (uart_vld)           
     );
 
 // ****************** FSM controlled of the whole system ******************
     Giraffe_ADC_FSM #(
-
+        .NUM_bit                (NUM_bit),
+        .NUM_Sampled            (NUM_Sampled),
+        .NUM_Calibration        (NUM_Calibration),
+        .UART_NUM_DATA          (UART_NUM_DATA),
+        .UART_BAUDRATE          (UART_BAUDRATE),
+        .UART_FREQ              (UART_FREQ)
     )
     Inst_Giraffe_ADC_FSM (
+        // signals from FPGA
+        .clk                    (clk_adc),
+        .nrst                   (nrst),
+        .pll_locked             (sys_locked),
+        .sw_NOWA                (sw_NOWA),
         
+        // LED Display for system status
+        .LED_cnt_received       (LED_cnt_received),
+        .LED_state              (LED_state),
+        .LED_out                (LED_out),
+
+        //  communicating with chip
+        .adc_rstn               (adc_rstn),
+        .adc_calib_ena          (adc_calib_ena),
+        .adc_ena                (adc_ena),
+        .adc_NOWA               (adc_NOWA),
+        .adc_ack                (adc_ack),
+        .adc_ack_sub            (adc_ack_sub),
+        .adc_dout               (adc_dout),
+
+        //  communicating with UART
+        .uart_rdata             (uart_rdata),
+        .uart_vld               (uart_vld),
+        .uart_wdata             (uart_wdata),
+        .uart_wreq              (uart_wreq),
+        .uart_rdy               (uart_rdy)
     );
 
 endmodule
