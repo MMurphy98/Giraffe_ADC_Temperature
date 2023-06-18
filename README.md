@@ -31,7 +31,7 @@ $$V_{out,DA_{1}} = V_{in,sampled} ~ \pm ~  V_{LSB}$$
 
 
 ### 可能遇到的BUG与TODO
-- [ ] FPGA的代码需要部分重构：
+- [x] FPGA的代码需要部分重构：
     - [x] 将 **FSM** 与顶层分开，使得顶层只有模块的实例化；
 	- [x] 需要添加对`calib_ena`  `reset` 信号的reaction，目前只要是发送指令，不管是什么都会触发reset，没有区分度；
 	- [x] 添加对Calibration 和 Sample 的次数控制reg；
