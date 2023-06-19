@@ -1,0 +1,331 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 2018  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus Prime
+# Version 18.1.0 Build 625 09/12/2018 SJ Standard Edition
+# Date created = 10:22:51  June 19, 2023
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		Giraffe_ADC_Temperature_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus Prime software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE115F29C7
+set_global_assignment -name TOP_LEVEL_ENTITY Giraffe
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.1.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:22:51  JUNE 19, 2023"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Standard Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
+set_global_assignment -name VERILOG_FILE src/uart_tx.v
+set_global_assignment -name VERILOG_FILE src/uart_rx_decoder.v
+set_global_assignment -name VERILOG_FILE src/uart_rx.v
+set_global_assignment -name VERILOG_FILE src/RiseEdgeTrigger.v
+set_global_assignment -name VERILOG_FILE src/Giraffe_FSM.v
+set_global_assignment -name VERILOG_FILE src/Giraffe.v
+set_global_assignment -name VERILOG_FILE src/FallEdgeTrigger.v
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name QIP_FILE IP/PLL_50M.qip
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+# -------------------------------------------------------
+# Pins location assignments
+#### FPGA Board
+set_location_assignment PIN_Y2 -to clk_50M
+set_location_assignment PIN_R24 -to nrst
+set_location_assignment PIN_AC25 -to sw_NOWA[8]
+set_location_assignment PIN_AB26 -to sw_NOWA[7]
+set_location_assignment PIN_AD26 -to sw_NOWA[6]
+set_location_assignment PIN_AC26 -to sw_NOWA[5]
+set_location_assignment PIN_AB27 -to sw_NOWA[4]
+set_location_assignment PIN_AD27 -to sw_NOWA[3]
+set_location_assignment PIN_AC27 -to sw_NOWA[2]
+set_location_assignment PIN_AC28 -to sw_NOWA[1]
+set_location_assignment PIN_AB28 -to sw_NOWA[0]
+
+set_location_assignment PIN_E24 -to LED_out[3]
+set_location_assignment PIN_E25 -to LED_out[2]
+set_location_assignment PIN_E22 -to LED_out[1]
+set_location_assignment PIN_E21 -to LED_out[0]
+
+set_location_assignment PIN_H15 -to LED_cnt_adc_received[17]
+set_location_assignment PIN_G16 -to LED_cnt_adc_received[16]
+set_location_assignment PIN_G15 -to LED_cnt_adc_received[15]
+set_location_assignment PIN_F15 -to LED_cnt_adc_received[14]
+set_location_assignment PIN_H17 -to LED_cnt_adc_received[13]
+set_location_assignment PIN_J16 -to LED_cnt_adc_received[12]
+set_location_assignment PIN_H16 -to LED_cnt_adc_received[11]
+set_location_assignment PIN_J15 -to LED_cnt_adc_received[10]
+set_location_assignment PIN_G17 -to LED_cnt_adc_received[9]
+set_location_assignment PIN_J17 -to LED_cnt_adc_received[8]
+set_location_assignment PIN_H19 -to LED_cnt_adc_received[7]
+set_location_assignment PIN_J19 -to LED_cnt_adc_received[6]
+set_location_assignment PIN_E18 -to LED_cnt_adc_received[5]
+set_location_assignment PIN_F18 -to LED_cnt_adc_received[4]
+set_location_assignment PIN_F21 -to LED_cnt_adc_received[3]
+set_location_assignment PIN_E19 -to LED_cnt_adc_received[2]
+set_location_assignment PIN_F19 -to LED_cnt_adc_received[1]
+set_location_assignment PIN_G19 -to LED_cnt_adc_received[0]
+
+set_location_assignment PIN_G21 -to LED_state[3]
+set_location_assignment PIN_G22 -to LED_state[2]
+set_location_assignment PIN_G20 -to LED_state[1]
+set_location_assignment PIN_H21 -to LED_state[0]
+
+set_location_assignment PIN_G9 -to tx2M
+set_location_assignment PIN_G12 -to rxfM
+
+#### ADC communicate
+set_location_assignment PIN_AE25 -to adc_rstn
+set_location_assignment PIN_AE23 -to clk_adc
+set_location_assignment PIN_AH25 -to adc_calib_ena
+set_location_assignment PIN_AD25 -to adc_ena
+set_location_assignment PIN_AD22 -to adc_ack
+set_location_assignment PIN_AG25 -to adc_ack_sub
+set_location_assignment PIN_AF22 -to adc_dout[4]
+set_location_assignment PIN_AF21 -to adc_dout[5]
+set_location_assignment PIN_AE22 -to adc_dout[2]
+set_location_assignment PIN_AC22 -to adc_dout[3]
+set_location_assignment PIN_AF25 -to adc_dout[0]
+set_location_assignment PIN_AE21 -to adc_dout[1]
+
+set_location_assignment PIN_AG26 -to adc_NOWA[7]
+set_location_assignment PIN_AH23 -to adc_NOWA[8]
+set_location_assignment PIN_AH26 -to adc_NOWA[5]
+set_location_assignment PIN_AF20 -to adc_NOWA[6]
+set_location_assignment PIN_AG23 -to adc_NOWA[3]
+set_location_assignment PIN_AE20 -to adc_NOWA[4]
+set_location_assignment PIN_AF26 -to adc_NOWA[1]
+set_location_assignment PIN_AH22 -to adc_NOWA[2]
+set_location_assignment PIN_AG22 -to adc_NOWA[0]
+
+set_location_assignment PIN_AF24 -to cap_rstn
+
+# -------------------------------------------------------
+# Current Strength Settings
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to clk_50M
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to nrst
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to clk_adc
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tx2M
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to rxfM
+
+
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_state[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_state[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_state[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_state[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_out[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_out[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_out[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_out[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[17]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[16]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[15]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[14]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[13]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[12]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[11]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[10]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[8]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[9]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to LED_cnt_adc_received[0]
+
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[8]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_NOWA[0]
+
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_rstn
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_calib_ena
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_ena
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_ack_sub
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_ack
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to adc_dout[1]
+
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to cap_rstn
+
+
+# -------------------------------------------------------
+# Slew Rate Settings
+
+set_instance_assignment -name SLEW_RATE 2 -to clk_50M
+set_instance_assignment -name SLEW_RATE 2 -to nrst
+set_instance_assignment -name SLEW_RATE 2 -to clk_adc
+set_instance_assignment -name SLEW_RATE 2 -to tx2M
+set_instance_assignment -name SLEW_RATE 2 -to rxfM
+
+
+set_instance_assignment -name SLEW_RATE 2 -to LED_state[3]
+set_instance_assignment -name SLEW_RATE 2 -to LED_state[2]
+set_instance_assignment -name SLEW_RATE 2 -to LED_state[1]
+set_instance_assignment -name SLEW_RATE 2 -to LED_state[0]
+set_instance_assignment -name SLEW_RATE 2 -to LED_out[3]
+set_instance_assignment -name SLEW_RATE 2 -to LED_out[2]
+set_instance_assignment -name SLEW_RATE 2 -to LED_out[1]
+set_instance_assignment -name SLEW_RATE 2 -to LED_out[0]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[17]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[16]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[15]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[14]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[13]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[12]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[11]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[10]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[8]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[9]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[7]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[6]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[5]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[4]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[3]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[2]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[1]
+set_instance_assignment -name SLEW_RATE 2 -to LED_cnt_adc_received[0]
+
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[7]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[8]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[5]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[6]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[3]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[4]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[1]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[2]
+set_instance_assignment -name SLEW_RATE 2 -to adc_NOWA[0]
+
+set_instance_assignment -name SLEW_RATE 2 -to adc_rstn
+set_instance_assignment -name SLEW_RATE 2 -to adc_calib_ena
+set_instance_assignment -name SLEW_RATE 2 -to adc_ena
+set_instance_assignment -name SLEW_RATE 2 -to adc_ack_sub
+set_instance_assignment -name SLEW_RATE 2 -to adc_ack
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[4]
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[5]
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[2]
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[3]
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[0]
+set_instance_assignment -name SLEW_RATE 2 -to adc_dout[1]
+
+set_instance_assignment -name SLEW_RATE 2 -to cap_rstn
+
+# -------------------------------------------------------
+# IO Standard
+
+set_instance_assignment -name IO_STANDARD "2.5 V" -to clk_50M
+set_instance_assignment -name IO_STANDARD "2.5 V" -to nrst
+set_instance_assignment -name IO_STANDARD "2.5 V" -to clk_adc
+set_instance_assignment -name IO_STANDARD "2.5 V" -to tx2M
+set_instance_assignment -name IO_STANDARD "2.5 V" -to rxfM
+
+
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_out[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_out[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_out[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_out[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[17]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[16]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[15]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[14]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[13]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[12]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[11]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[10]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[8]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[9]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[7]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_cnt_adc_received[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_state[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_state[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_state[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_state[0]
+
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[8]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to sw_NOWA[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[8]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_NOWA[7]
+
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_rstn
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_calib_ena
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_ena
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_ack_sub
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_ack
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to adc_dout[1]
+
+set_instance_assignment -name IO_STANDARD "2.5 V" -to cap_rstn
+
+# -------------------------------------------------------
+
+set_global_assignment -name SDC_FILE Giraffe_ADC_Temperature.out.sdc
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

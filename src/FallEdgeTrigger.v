@@ -23,4 +23,4 @@ module FallEdgeTrigger (
 
     assign  tout    =   tin_ff1 & (~tin);
 
-endmodule;
+endmodule

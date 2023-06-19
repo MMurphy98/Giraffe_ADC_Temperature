@@ -22,7 +22,7 @@ module Giraffe #(
 
 //    input                   system_ena,
     output	[3:0]	        LED_out,
-    output [17:0]           LED_cnt_received,
+    output [17:0]           LED_cnt_adc_received,
     output [3:0]            LED_state,
 
     // UART TX
@@ -32,7 +32,6 @@ module Giraffe #(
     // Control the ADC
     output                  adc_rstn,
     output                  clk_adc,
-	output					clk_ultra,
     output                  adc_calib_ena,
 	output				    adc_ena,
     output  [8:0]           adc_NOWA,
@@ -88,7 +87,7 @@ module Giraffe #(
     );
 
 // ****************** FSM controlled of the whole system ******************
-    Giraffe_ADC_FSM #(
+    Giraffe_FSM #(
         .NUM_bit                (NUM_bit),
         .NUM_Sampled            (NUM_Sampled),
         .NUM_Calibration        (NUM_Calibration),
@@ -96,7 +95,7 @@ module Giraffe #(
         .UART_BAUDRATE          (UART_BAUDRATE),
         .UART_FREQ              (UART_FREQ)
     )
-    Inst_Giraffe_ADC_FSM (
+    Inst_Giraffe_FSM (
         // signals from FPGA
         .clk                    (clk_adc),
         .nrst                   (nrst),
@@ -104,7 +103,7 @@ module Giraffe #(
         .sw_NOWA                (sw_NOWA),
         
         // LED Display for system status
-        .LED_cnt_received       (LED_cnt_received),
+        .LED_cnt_adc_received   (LED_cnt_adc_received),
         .LED_state              (LED_state),
         .LED_out                (LED_out),
 
@@ -124,5 +123,5 @@ module Giraffe #(
         .uart_wreq              (uart_wreq),
         .uart_rdy               (uart_rdy)
     );
-
+    assign cap_rstn = adc_rstn;
 endmodule

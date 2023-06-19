@@ -177,7 +177,7 @@ module Giraffe_FSM #(
     end
 
     always @(posedge clk or negedge nrst) begin
-        if ((~nrst) | (~sys_locked)) begin // reset all register
+        if (!nrst) begin // reset all register
             cnt_adc_ena <= 32'd0;
             cnt_adc_received <= 32'd0;
             cnt_uart_send <= 32'd0;
@@ -200,192 +200,215 @@ module Giraffe_FSM #(
 
         end
         else begin
-            case (ns) 
-                IDLE: begin
-                    cnt_adc_ena <= 32'd0;
-                    cnt_adc_received <= 32'd0;
-                    cnt_uart_send <= 32'd0;
-                    cnt_reset <= 32'd0;
-                    cnt_uart_clk <= 32'd0;
-                    cnt_adc_ena_clk <= 8'd0;
+            if (!pll_locked) begin
+                cnt_adc_ena <= 32'd0;
+                cnt_adc_received <= 32'd0;
+                cnt_uart_send <= 32'd0;
+                cnt_reset <= 32'd0;
+                cnt_uart_clk <= 32'd0;
+                cnt_adc_ena_clk <= 8'd0;
 
-                    adc_rstn_reg <= 1'd1;         // High Level effective
-                    adc_calib_ena_reg <= 1'd0;
-                    adc_ena_reg <= 1'd0;
-                    adc_NOWA_reg <= 9'd0;
-                    
-                    uart_wdata_reg <= 8'd0;
-                    uart_wreq_reg <= 1'd0;
-
-                    leds_reset <= 1'd0;
-                    leds_ena <= 1'd0;
-                    leds_received <= 1'd0;
-                    leds_uart <= 1'd0;
-                end
-
-                RESET: begin
-                    if (cnt_reset < RESET_PERIOD) begin 
-                        cnt_reset <= cnt_reset + 32'd1;
-                        adc_rstn_reg <= 1'd0;
-                        leds_reset <= 1'd0;
-                    end
-                    else begin  //  finish reset process
-                        cnt_reset <= cnt_reset;
-                        adc_rstn_reg <= 1'd1;
-                        leds_reset <= 1'd1;
-                    end
-
-                    adc_NOWA_reg <= sw_NOWA;
-                end
-
-                HOLD: begin
-                    cnt_adc_ena <= 32'd0;
-                    cnt_adc_received <= 32'd0;
-                    cnt_uart_send <= 32'd0;
-                    cnt_reset <= 32'd0;
-                    cnt_uart_clk <= 32'd0;
-                    cnt_adc_ena_clk <= 8'd0;
-      
-                    adc_calib_ena_reg <= 1'd0;
-                    adc_ena_reg <= 1'd0;
-
-                    uart_wdata_reg <= 8'd0;
-                    uart_wreq_reg <= 1'd0;
-
-
-
-                end
-
-                Calibration: begin
-                    if (cnt_adc_ena < NUM_Calibration) begin    // Generate adc_ena signal
-                        if (cnt_adc_ena_clk == 8'd24) begin
-                            cnt_adc_ena_clk <= 8'd0;
-                            adc_ena_reg <= 1'd1;
-                            cnt_adc_ena <= cnt_adc_ena + 32'd1;
-                        end 
-                        else begin
-                            cnt_adc_ena_clk <= cnt_adc_ena_clk + 8'd1;
-                            adc_ena_reg <= 1'd0;
-                            cnt_adc_ena <= cnt_adc_ena;
-                        end
-                        leds_ena <= 1'd0;
-                    end
-                    else begin
-                        adc_ena_reg <= 1'd0;
-                        cnt_adc_ena <= cnt_adc_ena;
-                        cnt_adc_ena_clk <= cnt_adc_ena_clk;
-                        leds_ena <= 1'd1;
-                    end
-
-                    if (adc_trigger == 1) begin                 // Store and Dout of ADC
-                        if (cnt_adc_received < memory_deepth_calib) begin
-                            cnt_adc_received <= cnt_adc_received + 32'd1;
-                            Onchip_Memory[cnt_adc_received] <= {dout_adc};
-                            leds_received <= 1'd1;
-                        end
-                        else begin
-                            cnt_adc_received <= cnt_adc_received;
-                        end
-                    end
-                    else begin
-                        cnt_adc_received <= cnt_adc_received;
-                    end
-                end
-
-                SAMPLE: begin
-                    if (cnt_adc_ena < NUM_Sampled) begin    // Generate adc_ena signal
-                        if (cnt_adc_ena_clk == 8'd24) begin
-                            cnt_adc_ena_clk <= 8'd0;
-                            adc_ena_reg <= 1'd1;
-                            cnt_adc_ena <= cnt_adc_ena + 32'd1;
-                        end 
-                        else begin
-                            cnt_adc_ena_clk <= cnt_adc_ena_clk + 8'd1;
-                            adc_ena_reg <= 1'd0;
-                            cnt_adc_ena <= cnt_adc_ena;
-                        end
-                        leds_ena <= 1'd0;
-                    end
-                    else begin
-                        adc_ena_reg <= 1'd0;
-                        cnt_adc_ena <= cnt_adc_ena;
-                        cnt_adc_ena_clk <= cnt_adc_ena_clk;
-                        leds_ena <= 1'd1;
-                    end
+                adc_rstn_reg <= 1'd1;         // High Level effective
+                adc_calib_ena_reg <= 1'd0;
+                adc_ena_reg <= 1'd0;
+                adc_NOWA_reg <= 9'd0;
                 
-                    if (adc_trigger == 1) begin                 // Store and Dout of ADC
-                        if (cnt_adc_received < memory_deepth) begin
-                            cnt_adc_received <= cnt_adc_received + 32'd1;
-                            Onchip_Memory[cnt_adc_received] <= {dout_adc};
-                            leds_received <= 1'd1;
-                        end
-                        else begin
-                            cnt_adc_received <= cnt_adc_received;
-                        end
-                    end
-                    else begin
-                        cnt_adc_received <= cnt_adc_received;
-                    end
-                end
+                uart_wdata_reg <= 8'd0;
+                uart_wreq_reg <= 1'd0;
 
-                SENDC: begin
-                    if (cnt_uart_send < memory_deepth_calib) begin
-                        case (cnt_uart_clk) 
-                            uart_period*11: begin
-                                uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
-                                uart_wreq_reg <= 1'd0;
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                            end
-                            uart_period*12: begin
-                                uart_wreq_reg <= 1'd1;
-                                cnt_uart_send <= cnt_uart_send + 32'd1;
-                                cnt_uart_clk <= 32'd0;
-                            end
-                            default: begin
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
-                            end
-                        endcase
-                        leds_received <= 1'd0;
-                    end
-                    else begin
+                leds_reset <= 1'd0;
+                leds_ena <= 1'd0;
+                leds_received <= 1'd0;
+                leds_uart <= 1'd0;
+            end
+            else begin
+                case (ns) 
+                    IDLE: begin
+                        cnt_adc_ena <= 32'd0;
+                        cnt_adc_received <= 32'd0;
+                        cnt_uart_send <= 32'd0;
+                        cnt_reset <= 32'd0;
+                        cnt_uart_clk <= 32'd0;
+                        cnt_adc_ena_clk <= 8'd0;
+
+                        adc_rstn_reg <= 1'd1;         // High Level effective
+                        adc_calib_ena_reg <= 1'd0;
+                        adc_ena_reg <= 1'd0;
+                        adc_NOWA_reg <= 9'd0;
+                        
+                        uart_wdata_reg <= 8'd0;
                         uart_wreq_reg <= 1'd0;
-                        uart_wdata_reg <= uart_wdata_reg;
-                        cnt_uart_clk <= cnt_uart_clk;
-                        cnt_uart_send <= cnt_uart_send;
-                        leds_received <= 1'd1;
-                    end
-                end
-                
-                SENDS: begin
-                    if (cnt_uart_send < memory_deepth) begin
-                        case (cnt_uart_clk) 
-                            uart_period*11: begin
-                                uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
-                                uart_wreq_reg <= 1'd0;
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                            end
-                            uart_period*12: begin
-                                uart_wreq_reg <= 1'd1;
-                                cnt_uart_send <= cnt_uart_send + 32'd1;
-                                cnt_uart_clk <= 32'd0;
-                            end
-                            default: begin
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
-                            end
-                        endcase
+
+                        leds_reset <= 1'd0;
+                        leds_ena <= 1'd0;
+                        leds_received <= 1'd0;
                         leds_uart <= 1'd0;
                     end
-                    else begin
-                        uart_wreq_reg <= 1'd0;
-                        uart_wdata_reg <= uart_wdata_reg;
-                        cnt_uart_clk <= cnt_uart_clk;
-                        cnt_uart_send <= cnt_uart_send;
-                        leds_uart <= 1'd1;
+
+                    RESET: begin
+                        if (cnt_reset < RESET_PERIOD) begin 
+                            cnt_reset <= cnt_reset + 32'd1;
+                            adc_rstn_reg <= 1'd0;
+                            leds_reset <= 1'd0;
+                        end
+                        else begin  //  finish reset process
+                            cnt_reset <= cnt_reset;
+                            adc_rstn_reg <= 1'd1;
+                            leds_reset <= 1'd1;
+                        end
+
+                        adc_NOWA_reg <= sw_NOWA;
                     end
-                end
-            endcase
+
+                    HOLD: begin
+                        cnt_adc_ena <= 32'd0;
+                        cnt_adc_received <= 32'd0;
+                        cnt_uart_send <= 32'd0;
+                        cnt_reset <= 32'd0;
+                        cnt_uart_clk <= 32'd0;
+                        cnt_adc_ena_clk <= 8'd0;
+        
+                        adc_calib_ena_reg <= 1'd0;
+                        adc_ena_reg <= 1'd0;
+
+                        uart_wdata_reg <= 8'd0;
+                        uart_wreq_reg <= 1'd0;
+
+
+
+                    end
+
+                    CALIB: begin
+                        if (cnt_adc_ena < NUM_Calibration) begin    // Generate adc_ena signal
+                            if (cnt_adc_ena_clk == 8'd24) begin
+                                cnt_adc_ena_clk <= 8'd0;
+                                adc_ena_reg <= 1'd1;
+                                cnt_adc_ena <= cnt_adc_ena + 32'd1;
+                            end 
+                            else begin
+                                cnt_adc_ena_clk <= cnt_adc_ena_clk + 8'd1;
+                                adc_ena_reg <= 1'd0;
+                                cnt_adc_ena <= cnt_adc_ena;
+                            end
+                            leds_ena <= 1'd0;
+                        end
+                        else begin
+                            adc_ena_reg <= 1'd0;
+                            cnt_adc_ena <= cnt_adc_ena;
+                            cnt_adc_ena_clk <= cnt_adc_ena_clk;
+                            leds_ena <= 1'd1;
+                        end
+
+                        if (adc_trigger == 1) begin                 // Store and Dout of ADC
+                            if (cnt_adc_received < memory_deepth_calib) begin
+                                cnt_adc_received <= cnt_adc_received + 32'd1;
+                                Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                leds_received <= 1'd1;
+                            end
+                            else begin
+                                cnt_adc_received <= cnt_adc_received;
+                            end
+                        end
+                        else begin
+                            cnt_adc_received <= cnt_adc_received;
+                        end
+                    end
+
+                    SAMPLE: begin
+                        if (cnt_adc_ena < NUM_Sampled) begin    // Generate adc_ena signal
+                            if (cnt_adc_ena_clk == 8'd24) begin
+                                cnt_adc_ena_clk <= 8'd0;
+                                adc_ena_reg <= 1'd1;
+                                cnt_adc_ena <= cnt_adc_ena + 32'd1;
+                            end 
+                            else begin
+                                cnt_adc_ena_clk <= cnt_adc_ena_clk + 8'd1;
+                                adc_ena_reg <= 1'd0;
+                                cnt_adc_ena <= cnt_adc_ena;
+                            end
+                            leds_ena <= 1'd0;
+                        end
+                        else begin
+                            adc_ena_reg <= 1'd0;
+                            cnt_adc_ena <= cnt_adc_ena;
+                            cnt_adc_ena_clk <= cnt_adc_ena_clk;
+                            leds_ena <= 1'd1;
+                        end
+                    
+                        if (adc_trigger == 1) begin                 // Store and Dout of ADC
+                            if (cnt_adc_received < memory_deepth) begin
+                                cnt_adc_received <= cnt_adc_received + 32'd1;
+                                Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                leds_received <= 1'd1;
+                            end
+                            else begin
+                                cnt_adc_received <= cnt_adc_received;
+                            end
+                        end
+                        else begin
+                            cnt_adc_received <= cnt_adc_received;
+                        end
+                    end
+
+                    SENDC: begin
+                        if (cnt_uart_send < memory_deepth_calib) begin
+                            case (cnt_uart_clk) 
+                                uart_period*11: begin
+                                    uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
+                                    uart_wreq_reg <= 1'd0;
+                                    cnt_uart_clk <= cnt_uart_clk + 32'd1;
+                                end
+                                uart_period*12: begin
+                                    uart_wreq_reg <= 1'd1;
+                                    cnt_uart_send <= cnt_uart_send + 32'd1;
+                                    cnt_uart_clk <= 32'd0;
+                                end
+                                default: begin
+                                    cnt_uart_clk <= cnt_uart_clk + 32'd1;
+                                    uart_wreq_reg <= 1'd0;
+                                end
+                            endcase
+                            leds_received <= 1'd0;
+                        end
+                        else begin
+                            uart_wreq_reg <= 1'd0;
+                            uart_wdata_reg <= uart_wdata_reg;
+                            cnt_uart_clk <= cnt_uart_clk;
+                            cnt_uart_send <= cnt_uart_send;
+                            leds_received <= 1'd1;
+                        end
+                    end
+                    
+                    SENDS: begin
+                        if (cnt_uart_send < memory_deepth) begin
+                            case (cnt_uart_clk) 
+                                uart_period*11: begin
+                                    uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
+                                    uart_wreq_reg <= 1'd0;
+                                    cnt_uart_clk <= cnt_uart_clk + 32'd1;
+                                end
+                                uart_period*12: begin
+                                    uart_wreq_reg <= 1'd1;
+                                    cnt_uart_send <= cnt_uart_send + 32'd1;
+                                    cnt_uart_clk <= 32'd0;
+                                end
+                                default: begin
+                                    cnt_uart_clk <= cnt_uart_clk + 32'd1;
+                                    uart_wreq_reg <= 1'd0;
+                                end
+                            endcase
+                            leds_uart <= 1'd0;
+                        end
+                        else begin
+                            uart_wreq_reg <= 1'd0;
+                            uart_wdata_reg <= uart_wdata_reg;
+                            cnt_uart_clk <= cnt_uart_clk;
+                            cnt_uart_send <= cnt_uart_send;
+                            leds_uart <= 1'd1;
+                        end
+                    end
+                endcase
+            end
         end     
     end 
 

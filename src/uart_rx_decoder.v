@@ -15,22 +15,27 @@ module uart_rx_decoder #(
 
     reg     [CMDLENGTH-1:0]     cmdout_reg;
     always @(posedge clk or negedge nrst) begin
-        if ((~nrst) | (~sys_locked)) begin
+        if (!nrst) begin
             cmdout_reg <= 4'd0;
         end
         else begin
-            if (uart_vld) begin 
-                case (uart_rdata) 
-                    8'hCB:      // Calibration
-                        cmdout_reg <= 4'h1;
-                    8'hAD:      // A/D Sample
-                        cmdout_reg <= 4'h2;
-                    default:
-                        cmdout_reg <= 4'hF;
-                endcase
+            if (!sys_locked) begin
+                cmdout_reg <= 4'd0;
             end
-            else
-                cmdout_reg <= cmdout_reg;
+            else begin
+                if (uart_vld) begin 
+                    case (uart_rdata) 
+                        8'hCB:      // Calibration
+                            cmdout_reg <= 4'h1;
+                        8'hAD:      // A/D Sample
+                            cmdout_reg <= 4'h2;
+                        default:
+                            cmdout_reg <= 4'hF;
+                    endcase
+                end
+                else
+                    cmdout_reg <= cmdout_reg;
+            end
         end 
     end
 

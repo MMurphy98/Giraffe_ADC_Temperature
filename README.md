@@ -37,3 +37,13 @@ $$V_{out,DA_{1}} = V_{in,sampled} ~ \pm ~  V_{LSB}$$
 	- [x] 添加对Calibration 和 Sample 的次数控制reg；
 - [x] UART0 控制DS360需要测试，目前没有只停留在理论可行阶段；
 - [ ] 由于DMM的最低采样率为1kHz，因此关于温度的测量结果可能会远大于ADC的测量结果，**绘图结果的时候可能需要插值来实现对齐**；
+
+### git ignore
+
+```git
+# .gitignore
+output_files/*
+db/*
+greybox_temp/*
+incremental_db/*
+```
