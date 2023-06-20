@@ -43,11 +43,6 @@ module Giraffe #(
     output                  cap_rstn
 );
 
-	wire sys_locked;
-	wire clk_uart;
-	wire uart_wreq, uart_rdy;
-	wire [UART_NUM_DATA-1:0] uart_wdata, uart_rdata;
-	
 // ****************** Clock Buffer of the whole system ******************
     PLL_50M Inst_PLL (
         .areset                 (~nrst),

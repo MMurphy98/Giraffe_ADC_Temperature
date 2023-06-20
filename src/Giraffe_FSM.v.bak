@@ -47,9 +47,7 @@ module Giraffe_FSM #(
     wire    [CMDLENGTH-1:0]     uart_rx_cmdout;
 // ********************* Registor Declaration *********************
     // Counters
-    reg [7:0]   cnt_adc_ena;    // for debug;
-    // reg [31:0]  cnt_adc_ena;
-    reg [31:0]  cnt_adc_received;
+    reg [31:0]  cnt_adc_ena, cnt_adc_received;
     reg [31:0]  cnt_uart_send;
     reg [31:0]  cnt_reset;
     reg [31:0]  cnt_uart_clk;
@@ -104,10 +102,10 @@ module Giraffe_FSM #(
     parameter   IDLE    =   4'd0;
     parameter   RESET   =   4'd1;
     parameter   HOLD    =   4'd2;
-    parameter   SAMPLE  =   4'b0011;
-    parameter   CALIB   =   4'b1100;
-    parameter   SENDS   =   4'b0111;
-    parameter   SENDC   =   4'b1110;
+    parameter   SAMPLE  =   4'd3;
+    parameter   CALIB   =   4'd4;
+    parameter   SENDS   =   4'd5;
+    parameter   SENDC   =   4'd6;
 
 
     // state transfer
@@ -187,7 +185,7 @@ module Giraffe_FSM #(
             cnt_uart_clk <= 32'd0;
             cnt_adc_ena_clk <= 8'd0;
 
-            adc_rstn_reg <= 1'd1;         // low Level effective
+            adc_rstn_reg <= 1'd1;         // High Level effective
             adc_calib_ena_reg <= 1'd0;
             adc_ena_reg <= 1'd0;
             adc_NOWA_reg <= 9'd0;
@@ -210,7 +208,7 @@ module Giraffe_FSM #(
                 cnt_uart_clk <= 32'd0;
                 cnt_adc_ena_clk <= 8'd0;
 
-                adc_rstn_reg <= 1'd1;         // low Level effective
+                adc_rstn_reg <= 1'd1;         // High Level effective
                 adc_calib_ena_reg <= 1'd0;
                 adc_ena_reg <= 1'd0;
                 adc_NOWA_reg <= 9'd0;
@@ -233,7 +231,7 @@ module Giraffe_FSM #(
                         cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
 
-                        adc_rstn_reg <= 1'd1;         // low Level effective
+                        adc_rstn_reg <= 1'd1;         // High Level effective
                         adc_calib_ena_reg <= 1'd0;
                         adc_ena_reg <= 1'd0;
                         adc_NOWA_reg <= 9'd0;
@@ -248,9 +246,16 @@ module Giraffe_FSM #(
                     end
 
                     RESET: begin
-                        cnt_reset <= cnt_reset + 32'd1;
-                        adc_rstn_reg <= 1'd0;
-                        leds_reset <= 1'd0;
+                        if (cnt_reset < RESET_PERIOD) begin 
+                            cnt_reset <= cnt_reset + 32'd1;
+                            adc_rstn_reg <= 1'd0;
+                            leds_reset <= 1'd0;
+                        end
+                        else begin  //  finish reset process
+                            cnt_reset <= cnt_reset;
+                            adc_rstn_reg <= 1'd1;
+                            leds_reset <= 1'd1;
+                        end
 
                         adc_NOWA_reg <= sw_NOWA;
                     end
@@ -265,16 +270,13 @@ module Giraffe_FSM #(
         
                         adc_calib_ena_reg <= 1'd0;
                         adc_ena_reg <= 1'd0;
-                        adc_rstn_reg <= 1'd1;
 
                         uart_wdata_reg <= 8'd0;
                         uart_wreq_reg <= 1'd0;
 
-                        leds_reset <= 1'd1;
                     end
 
                     CALIB: begin
-                        adc_calib_ena_reg <= 1'd1;
                         if (cnt_adc_ena < NUM_Calibration) begin    // Generate adc_ena signal
                             if (cnt_adc_ena_clk == 8'd24) begin
                                 cnt_adc_ena_clk <= 8'd0;
@@ -311,7 +313,6 @@ module Giraffe_FSM #(
                     end
 
                     SAMPLE: begin
-                        adc_calib_ena_reg <= 1'd0;
                         if (cnt_adc_ena < NUM_Sampled) begin    // Generate adc_ena signal
                             if (cnt_adc_ena_clk == 8'd24) begin
                                 cnt_adc_ena_clk <= 8'd0;
@@ -366,7 +367,7 @@ module Giraffe_FSM #(
                             //     end
                             // endcase
                             if (cnt_uart_clk == uart_period * 11) begin
-                                uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
+                                uart_wdata_reg <= {2'b11, Onchip_Memory[uart_cnt_send]};
                                 cnt_uart_clk <= cnt_uart_clk + 32'd1;
                                 uart_wreq_reg <= 1'd0;
                             end else if (cnt_uart_clk == uart_period * 12) begin
@@ -391,7 +392,7 @@ module Giraffe_FSM #(
                     SENDS: begin
                         if (cnt_uart_send < memory_deepth) begin
                             if (cnt_uart_clk == uart_period * 11) begin
-                                uart_wdata_reg <= {2'b00, Onchip_Memory[cnt_uart_send]};
+                                uart_wdata_reg <= {2'b11, Onchip_Memory[uart_cnt_send]};
                                 cnt_uart_clk <= cnt_uart_clk + 32'd1;
                                 uart_wreq_reg <= 1'd0;
                             end else if (cnt_uart_clk == uart_period * 12) begin
