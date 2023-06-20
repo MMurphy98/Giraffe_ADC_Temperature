@@ -47,3 +47,14 @@ db/*
 greybox_temp/*
 incremental_db/*
 ```
+
+---
+
+## 实验测试计划
+
+1. Verilog 代码上版测试，不带温漂测试，测试RX、TX calibration和sample的基本功能；
+2. 测试一次Calibration和一次Sample所需的时间，测量升温曲线速率；
+3. 温度范围 27~125℃，温度间隔5℃，每个温度点做1次Calibration+10次Sample，取ENOB的平均值；
+
+### 实验进度
+- **20230620：** 完成对 Verilog 代码中 adc_rstn 信号出错的问题， 通过了 **UART Command** 使得状态转移的测试，预计 **0621** 完成 Verilog 代码验证；
