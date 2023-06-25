@@ -1,12 +1,13 @@
 module Giraffe_FSM #(
     parameter   NUM_bit = 6,
     parameter   NUM_Sampled = 102400,
-    parameter   NUM_Calibration = 1000,
+    parameter   NUM_Calibration = 10000,
     parameter   UART_NUM_DATA = 8,
     parameter   UART_BAUDRATE = 256000,
     parameter   UART_FREQ = 50_000_000,
     parameter   CMDLENGTH = 4,
-    parameter   RESET_PERIOD = 1000
+    parameter   RESET_PERIOD = 1000,
+    parameter   UART_PRE_DELAY = 5_000_000
 ) 
 (
     // signals from FPGA
@@ -47,14 +48,15 @@ module Giraffe_FSM #(
     wire    [CMDLENGTH-1:0]     uart_rx_cmdout;
 // ********************* Registor Declaration *********************
     // Counters
-    reg [7:0]   cnt_adc_ena;    // for debug;
-    // reg [31:0]  cnt_adc_ena;
+//    reg [7:0]   cnt_adc_ena;    // for debug;
+    reg [31:0]  cnt_adc_ena;
     reg [31:0]  cnt_adc_received;
     reg [31:0]  cnt_uart_send;
     reg [31:0]  cnt_reset;
     reg [31:0]  cnt_uart_clk;
     reg [7:0]   cnt_adc_ena_clk;
-    
+    reg [31:0]  cnt_uart_wait;
+
     // Output Reg
     reg adc_rstn_reg, adc_calib_ena_reg, adc_ena_reg;
     reg [8:0]   adc_NOWA_reg;
@@ -66,6 +68,7 @@ module Giraffe_FSM #(
     // Assign reg Onchip_Memory as M9K block memory 
 	(* regstyle = "M9K" *) reg [NUM_bit-1:0] Onchip_Memory [memory_deepth-1:0];
 
+    // reg [1:0]   ns_flag;    // 2'b10 for calibration; 2'b01 for calibration;
 
 
     uart_rx_decoder #(
@@ -101,14 +104,14 @@ module Giraffe_FSM #(
 // ********************* FSM Settup *********************
     reg [3:0]   cs, ns;
     
-    parameter   IDLE    =   4'd0;
-    parameter   RESET   =   4'd1;
-    parameter   HOLD    =   4'd2;
-    parameter   SAMPLE  =   4'b0011;
-    parameter   CALIB   =   4'b1100;
-    parameter   SENDS   =   4'b0111;
-    parameter   SENDC   =   4'b1110;
-
+    parameter   IDLE        =   4'd0;
+    parameter   RESET       =   4'd1;
+    parameter   HOLD        =   4'd2;
+    parameter   SAMPLE      =   4'b0011;
+    parameter   CALIB       =   4'b1100;
+    parameter   SENDS       =   4'b0111;
+    parameter   SENDC       =   4'b1110;
+    parameter   UART_WAIT   =   4'b1111;
 
     // state transfer
     always @(posedge clk or negedge nrst) begin
@@ -121,7 +124,7 @@ module Giraffe_FSM #(
     end
 
     // decide to next state
-    always @(cs, nrst, cnt_adc_ena, cnt_adc_received, cnt_uart_send, cnt_reset, uart_rx_done, uart_rx_cmdout) begin
+    always @(cs, nrst, cnt_adc_ena, cnt_adc_received, cnt_uart_send, cnt_reset, uart_rx_done, uart_rx_cmdout, cnt_uart_wait) begin
         if (!nrst) begin
             ns = IDLE;
         end
@@ -138,14 +141,27 @@ module Giraffe_FSM #(
                 
                 HOLD:
                     if (uart_rx_done) begin
+                        // case (uart_rx_cmdout)
+                        //     4'h1:       ns = CALIB;
+                        //     4'h2:       ns = SAMPLE;
+                        //     default:    ns = RESET;     // command error
+                        // endcase
+                        ns = UART_WAIT;
+                    end
+                    else begin      // wait for uart command in
+                        ns = HOLD;
+                    end
+
+                UART_WAIT:
+                    if (cnt_uart_wait == UART_PRE_DELAY) begin
                         case (uart_rx_cmdout)
                             4'h1:       ns = CALIB;
                             4'h2:       ns = SAMPLE;
                             default:    ns = RESET;     // command error
                         endcase
                     end
-                    else begin      // wait for uart command in
-                        ns = HOLD;
+                    else begin
+                        ns = UART_WAIT;
                     end
                 
                 CALIB:
@@ -186,6 +202,7 @@ module Giraffe_FSM #(
             cnt_reset <= 32'd0;
             cnt_uart_clk <= 32'd0;
             cnt_adc_ena_clk <= 8'd0;
+            cnt_uart_wait <= 32'd0;
 
             adc_rstn_reg <= 1'd1;         // low Level effective
             adc_calib_ena_reg <= 1'd0;
@@ -209,6 +226,7 @@ module Giraffe_FSM #(
                 cnt_reset <= 32'd0;
                 cnt_uart_clk <= 32'd0;
                 cnt_adc_ena_clk <= 8'd0;
+                cnt_uart_wait <= 32'd0;
 
                 adc_rstn_reg <= 1'd1;         // low Level effective
                 adc_calib_ena_reg <= 1'd0;
@@ -232,6 +250,7 @@ module Giraffe_FSM #(
                         cnt_reset <= 32'd0;
                         cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
+                        cnt_uart_wait <= 32'd0;
 
                         adc_rstn_reg <= 1'd1;         // low Level effective
                         adc_calib_ena_reg <= 1'd0;
@@ -262,6 +281,7 @@ module Giraffe_FSM #(
                         cnt_reset <= 32'd0;
                         cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
+                        cnt_uart_wait <= 32'd0;
         
                         adc_calib_ena_reg <= 1'd0;
                         adc_ena_reg <= 1'd0;
@@ -273,8 +293,13 @@ module Giraffe_FSM #(
                         leds_reset <= 1'd1;
                     end
 
+                    UART_WAIT: begin
+                        cnt_uart_wait <= cnt_uart_wait + 32'd1;
+                    end
+
                     CALIB: begin
                         adc_calib_ena_reg <= 1'd1;
+                        cnt_uart_wait <= 32'd0;
                         if (cnt_adc_ena < NUM_Calibration) begin    // Generate adc_ena signal
                             if (cnt_adc_ena_clk == 8'd24) begin
                                 cnt_adc_ena_clk <= 8'd0;
@@ -312,6 +337,7 @@ module Giraffe_FSM #(
 
                     SAMPLE: begin
                         adc_calib_ena_reg <= 1'd0;
+                        cnt_uart_wait <= 32'd0;
                         if (cnt_adc_ena < NUM_Sampled) begin    // Generate adc_ena signal
                             if (cnt_adc_ena_clk == 8'd24) begin
                                 cnt_adc_ena_clk <= 8'd0;
@@ -366,7 +392,7 @@ module Giraffe_FSM #(
                             //     end
                             // endcase
                             if (cnt_uart_clk == uart_period * 11) begin
-                                uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
+                                uart_wdata_reg <= {2'b00, Onchip_Memory[cnt_uart_send]};
                                 cnt_uart_clk <= cnt_uart_clk + 32'd1;
                                 uart_wreq_reg <= 1'd0;
                             end else if (cnt_uart_clk == uart_period * 12) begin
