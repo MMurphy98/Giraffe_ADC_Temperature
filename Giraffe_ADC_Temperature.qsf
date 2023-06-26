@@ -330,4 +330,6 @@ set_global_assignment -name VERILOG_FILE src/FallEdgeTrigger.v
 set_global_assignment -name QIP_FILE IP/PLL_50M.qip
 set_global_assignment -name IGNORE_PARTITIONS ON
 set_global_assignment -name AUTO_EXPORT_INCREMENTAL_COMPILATION ON
+set_location_assignment PIN_Y23 -to sw_and
+set_location_assignment PIN_Y24 -to sw_or
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

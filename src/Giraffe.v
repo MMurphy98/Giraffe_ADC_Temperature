@@ -31,7 +31,7 @@ module Giraffe #(
 	 
     // Control the ADC
     output                  adc_rstn,
-    output                  clk_adc,
+    output                  clk_adc_random,
     output                  adc_calib_ena,
 	output				    adc_ena,
     output  [8:0]           adc_NOWA,
@@ -40,7 +40,11 @@ module Giraffe #(
     input   [NUM_bit-1:0]   adc_dout,
 
     // To caparray
-    output                  cap_rstn
+    output                  cap_rstn,
+	 
+	 // SW for random clock
+	 input	                sw_or,
+	 input	                sw_and
 );
 
 	wire sys_locked;
@@ -102,7 +106,7 @@ module Giraffe #(
     )
     Inst_Giraffe_FSM (
         // signals from FPGA
-        .clk                    (clk_adc),
+        .clk                    (clk_adc_random),
         .nrst                   (nrst),
         .pll_locked             (sys_locked),
         .sw_NOWA                (sw_NOWA),
@@ -129,4 +133,10 @@ module Giraffe #(
         .uart_rdy               (uart_rdy)
     );
     assign cap_rstn = adc_rstn;
+
+    wire clk_adc_nand;
+    nand(clk_adc_and, clk_adc, sw_and);
+    nor(clk_adc_random, clk_adc_and, sw_or);
+    
+
 endmodule
