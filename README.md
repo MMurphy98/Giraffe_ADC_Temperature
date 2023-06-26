@@ -78,3 +78,5 @@ incremental_db/*
 
 1. 通过逻辑门在输出的**时钟上面加随机延迟抖动**，以符合测试要求；
 2. **使用USB-to-SPI模块**实现实时传输数据，所需的输入信号频率待仿真计算；
+
+![Input Frequency](./img/image.png)
