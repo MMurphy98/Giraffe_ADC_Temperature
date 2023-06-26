@@ -58,3 +58,4 @@ incremental_db/*
 
 ### 实验进度
 - **20230620：** 完成对 Verilog 代码中 adc_rstn 信号出错的问题， 通过了 **UART Command** 使得状态转移的测试，预计 **0621** 完成 Verilog 代码验证；
+- **20230625：** Verilog 代码完成，添加了 `UART_WAIT` 状态，能够在MATLAB发出控制指令之后等待0.1s再进行响应，具有更好的代码健壮性； 
