@@ -31,7 +31,7 @@ module Giraffe #(
 	 
     // Control the ADC
     output                  adc_rstn,
-    output                  clk_adc_random,
+    output                  clk_adc,
     output                  adc_calib_ena,
 	output				    adc_ena,
     output  [8:0]           adc_NOWA,
@@ -51,13 +51,16 @@ module Giraffe #(
 	wire clk_uart;
 	wire uart_wreq, uart_rdy;
 	wire [UART_NUM_DATA-1:0] uart_wdata, uart_rdata;
+
+    wire clk_adc_nand;
+    wire clk_adc_pll;
 	
 // ****************** Clock Buffer of the whole system ******************
     PLL_50M Inst_PLL (
         .areset                 (~nrst),
         .locked                 (sys_locked),
         .inclk0                 (clk_50M),
-        .c0                     (clk_adc),      // 50MHz
+        .c0                     (clk_adc_pll),      // 50MHz
         .c1					    (clk_uart)      // 50MHz
     );
 
@@ -106,7 +109,7 @@ module Giraffe #(
     )
     Inst_Giraffe_FSM (
         // signals from FPGA
-        .clk                    (clk_adc_random),
+        .clk                    (clk_adc),
         .nrst                   (nrst),
         .pll_locked             (sys_locked),
         .sw_NOWA                (sw_NOWA),
@@ -134,9 +137,10 @@ module Giraffe #(
     );
     assign cap_rstn = adc_rstn;
 
-    wire clk_adc_nand;
-    nand(clk_adc_and, clk_adc, sw_and);
-    nor(clk_adc_random, clk_adc_and, sw_or);
-    
+
+    // nand(clk_adc_nand, clk_adc_pll, sw_and);
+    // nor(clk_adc, clk_adc_nand, sw_or);
+    assign clk_adc_nand = ~(clk_adc_pll & sw_and);
+    assign clk_adc = ~ (clk_adc_nand | sw_or);
 
 endmodule
