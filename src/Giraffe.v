@@ -54,6 +54,8 @@ module Giraffe #(
 
     wire clk_adc_nand;
     wire clk_adc_pll;
+	 
+	
 	
 // ****************** Clock Buffer of the whole system ******************
     PLL_50M Inst_PLL (
@@ -63,7 +65,7 @@ module Giraffe #(
         .c0                     (clk_adc_pll),      // 50MHz
         .c1					    (clk_uart)      // 50MHz
     );
-
+	assign clk_adc = clk_50M;
 
 // ****************** Build communication with PC ******************
     uart_tx #(
@@ -140,7 +142,7 @@ module Giraffe #(
 
     // nand(clk_adc_nand, clk_adc_pll, sw_and);
     // nor(clk_adc, clk_adc_nand, sw_or);
-    assign clk_adc_nand = ~(clk_adc_pll & sw_and);
-    assign clk_adc = ~ (clk_adc_nand | sw_or);
+//    assign clk_adc_nand = ~(clk_adc_pll & sw_and);
+//    assign clk_adc = ~ (clk_adc_nand | sw_or);
 
 endmodule
