@@ -19,7 +19,7 @@
 ## PROGRAM "Quartus Prime"
 ## VERSION "Version 18.1.0 Build 625 09/12/2018 SJ Standard Edition"
 
-## DATE    "Tue Sep 27 11:46:27 2022"
+## DATE    "Mon Jul 10 23:18:57 2023"
 
 ##
 ## DEVICE  "EP4CE115F29C7"
@@ -38,14 +38,15 @@ set_time_format -unit ns -decimal_places 3
 # Create Clock
 #**************************************************************
 
-create_clock -name {clk_50M} -period 20 -waveform { 0.000 10.000 } [get_ports {clk_50M}]
+create_clock -name {clk_50M} -period 20.000 -waveform { 0.000 10.000 } [get_ports {clk_50M}]
 
 
 #**************************************************************
 # Create Generated Clock
 #**************************************************************
 
-# create_generated_clock -name {u_my_PLL|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {u_my_PLL|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 1 -divide_by 5000 -master_clock {clk_50M} [get_pins {u_my_PLL|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 1 -master_clock {clk_50M} [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]} -source [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 1 -master_clock {clk_50M} [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] 
 
 
 #**************************************************************
@@ -58,80 +59,94 @@ create_clock -name {clk_50M} -period 20 -waveform { 0.000 10.000 } [get_ports {c
 # Set Clock Uncertainty
 #**************************************************************
 
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[1]}]  0.020  
 
 
 #**************************************************************
 # Set Input Delay
 #**************************************************************
-
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {nrst}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[0]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[1]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[2]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[3]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[4]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[5]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[6]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[7]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {sw_NOWA[8]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_ack}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_ack_sub}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[0]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[1]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[2]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[3]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[4]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_dout[5]}]
-set_input_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {rxfM}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {nrst}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[0]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[1]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[2]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[3]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[4]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[5]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[6]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[7]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {sw_NOWA[8]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_ack}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_ack_sub}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[0]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[1]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[2]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[3]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[4]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_dout[5]}]
+set_input_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {rxfM}]
 
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_out[0]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_out[1]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_out[2]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_out[3]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[0]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[1]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[2]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[3]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[4]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[5]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[6]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[7]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[8]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[9]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[10]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[11]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[12]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[13]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[14]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[15]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[16]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_cnt_adc_received[17]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_state[0]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_state[1]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_state[2]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {LED_state[3]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {tx2M}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {rstn_adc}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[0]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[1]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[2]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[3]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[4]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[5]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[6]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[7]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_NOWA[8]}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {calib_ena_adc}]
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {adc_ena}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_out[0]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_out[1]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_out[2]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_out[3]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[0]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[1]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[2]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[3]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[4]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[5]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[6]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[7]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[8]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[9]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[10]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[11]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[12]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[13]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[14]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[15]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[16]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_cnt_adc_received[17]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_state[0]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_state[1]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_state[2]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {LED_state[3]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {rstn_adc}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[0]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[1]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[2]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[3]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[4]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[5]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[6]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[7]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_NOWA[8]}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {calib_ena_adc}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_ena}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {cap_rstn}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {clk_adc}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {spi_mosi}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {spi_csn}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {spi_sclk}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_calib_ena}]
+set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_rstn}]
 
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  2.000 [get_ports {cap_rstn}]
-
-set_output_delay -add_delay  -clock [get_clocks {clk_50M}]  1.000 [get_ports {clk_adc}]
 
 #**************************************************************
 # Set Clock Groups

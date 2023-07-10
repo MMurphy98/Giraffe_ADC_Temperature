@@ -1,13 +1,14 @@
 module Giraffe_FSM #(
-    parameter   NUM_bit = 6,
-    parameter   NUM_Sampled = 102400,
-    parameter   NUM_Calibration = 10000,
-    parameter   UART_NUM_DATA = 8,
-    parameter   UART_BAUDRATE = 256000,
-    parameter   UART_FREQ = 50_000_000,
-    parameter   CMDLENGTH = 4,
-    parameter   RESET_PERIOD = 1000,
-    parameter   UART_PRE_DELAY = 5_000_000
+    parameter   NUM_bit         =   6,
+    parameter   NUM_Sampled     =   102400,
+    parameter   NUM_Calibration =   10000,
+    parameter   UART_NUM_DATA   =   8,
+    parameter   UART_BAUDRATE   =   256000,
+    parameter   UART_FREQ       =   50_000_000,
+    parameter   CMDLENGTH       =   4,
+    parameter   RESET_PERIOD    =   1000,
+    parameter   UART_PRE_DELAY  =   5_000_000,
+    parameter   SPI_BIT_LENGTH  =   96
 ) 
 (
     // signals from FPGA
@@ -33,13 +34,27 @@ module Giraffe_FSM #(
     //  communicating with UART
     input   [UART_NUM_DATA-1:0]     uart_rdata,
     input                           uart_vld,
-    output  [UART_NUM_DATA-1:0]     uart_wdata,
-    output                          uart_wreq,
-    input                           uart_rdy
+
+    output  [SPI_BIT_LENGTH-1:0]    spi_wdata,
+    output                          spi_wreq,
+    input                           spi_csn
+    // input   [31:0]                  cnt_spi_send
+
+    // Disable Uart TX
+    // output  [UART_NUM_DATA-1:0]     uart_wdata,
+    // output                          uart_wreq,
+    // input                           uart_rdy
 );
+
 // ********************* Parameter Declaration *********************
     localparam memory_deepth = NUM_Sampled*4;
     localparam memory_deepth_calib = NUM_Calibration*4;
+
+    localparam num_spi_per = SPI_BIT_LENGTH / 24;
+    localparam num_spi_sent = NUM_Sampled / num_spi_per;
+    localparam num_spi_sent_calib = NUM_Calibration / num_spi_per;
+
+
     localparam uart_period = UART_FREQ / UART_BAUDRATE;
 
 // ********************* Wire Declaration *********************
@@ -51,22 +66,28 @@ module Giraffe_FSM #(
 //    reg [7:0]   cnt_adc_ena;    // for debug;
     reg [31:0]  cnt_adc_ena;
     reg [31:0]  cnt_adc_received;
-    reg [31:0]  cnt_uart_send;
     reg [31:0]  cnt_reset;
-    reg [31:0]  cnt_uart_clk;
     reg [7:0]   cnt_adc_ena_clk;
+    reg [31:0]  cnt_uart_clk;
     reg [31:0]  cnt_uart_wait;
+    // reg [31:0]  cnt_uart_send;
+    reg [31:0]  cnt_spi_send;
+    reg [15:0]  cnt_ad_times;
+
 
     // Output Reg
     reg adc_rstn_reg, adc_calib_ena_reg, adc_ena_reg;
     reg [8:0]   adc_NOWA_reg;
-    reg [UART_NUM_DATA-1:0] uart_wdata_reg;
-    reg uart_wreq_reg;   
+    // reg [UART_NUM_DATA-1:0] uart_wdata_reg;
+    // reg uart_wreq_reg;   
+    reg [SPI_BIT_LENGTH-1:0] spi_wdata_reg;
+    reg spi_wreq_reg;
+
 
     reg leds_reset, leds_ena, leds_received, leds_uart;     
 
     // Assign reg Onchip_Memory as M9K block memory 
-	(* regstyle = "M9K" *) reg [NUM_bit-1:0] Onchip_Memory [memory_deepth-1:0];
+	// (* regstyle = "M9K" *) reg [NUM_bit-1:0] Onchip_Memory [memory_deepth-1:0];
 
     // reg [1:0]   ns_flag;    // 2'b10 for calibration; 2'b01 for calibration;
 
@@ -93,6 +114,14 @@ module Giraffe_FSM #(
         .tout       (adc_trigger)
     );
 
+    RiseEdgeTrigger Inst_RiseEdgeTrigger_2 (
+        .clk        (clk),
+        .nrst       (nrst),
+        .locked     (pll_locked),
+        .tin        (spi_csn),
+        .tout       (spi_csn_trigger)
+    );
+
     FallEdgeTrigger Inst_FallEdgeTrigger (
         .clk        (clk),
         .nrst       (nrst),
@@ -109,8 +138,8 @@ module Giraffe_FSM #(
     parameter   HOLD        =   4'd2;
     parameter   SAMPLE      =   4'b0011;
     parameter   CALIB       =   4'b1100;
-    parameter   SENDS       =   4'b0111;
-    parameter   SENDC       =   4'b1110;
+    // parameter   SENDS       =   4'b0111;
+    // parameter   SENDC       =   4'b1110;
     parameter   UART_WAIT   =   4'b1111;
 
     // state transfer
@@ -124,14 +153,17 @@ module Giraffe_FSM #(
     end
 
     // decide to next state
-    always @(cs, nrst, cnt_adc_ena, cnt_adc_received, cnt_uart_send, cnt_reset, uart_rx_done, uart_rx_cmdout, cnt_uart_wait) begin
+    always @(cs, nrst, cnt_adc_ena, cnt_adc_received, cnt_spi_send, cnt_reset, uart_rx_done, uart_rx_cmdout, cnt_uart_wait, pll_locked) begin
         if (!nrst) begin
             ns = IDLE;
         end
         else begin
             case (cs)
                 IDLE:
-                    ns = RESET;
+                    if (pll_locked)
+                        ns = RESET;
+                    else   
+                        ns = IDLE;
                 
                 RESET:
                     if (cnt_reset == RESET_PERIOD)
@@ -165,28 +197,28 @@ module Giraffe_FSM #(
                     end
                 
                 CALIB:
-                    if ((cnt_adc_ena==NUM_Calibration) && (cnt_adc_received==memory_deepth_calib))
-                        ns = SENDC;
+                    if ((cnt_adc_ena==NUM_Calibration) && (cnt_adc_received==memory_deepth_calib) && (cnt_spi_send == num_spi_sent_calib))
+                        ns = HOLD;
                     else
                         ns = CALIB;
                 
                 SAMPLE:
-                    if ((cnt_adc_ena==NUM_Sampled) && (cnt_adc_received==memory_deepth))
-                        ns = SENDS;
+                    if ((cnt_adc_ena==NUM_Sampled) && (cnt_adc_received==memory_deepth) && (cnt_spi_send == num_spi_sent))
+                        ns = HOLD;
                     else
                         ns = SAMPLE;
                 
-                SENDC:
-                    if (cnt_uart_send == memory_deepth_calib) 
-                        ns = HOLD;
-                    else
-                        ns = SENDC;
+                // SENDC:
+                //     if (cnt_uart_send == memory_deepth_calib) 
+                //         ns = HOLD;
+                //     else
+                //         ns = SENDC;
                 
-                SENDS:
-                    if (cnt_uart_send == memory_deepth)
-                        ns = HOLD;
-                    else
-                        ns = SENDS;
+                // SENDS:
+                //     if (cnt_uart_send == memory_deepth)
+                //         ns = HOLD;
+                //     else
+                //         ns = SENDS;
                 
                 default:
                     ns = IDLE;
@@ -198,19 +230,20 @@ module Giraffe_FSM #(
         if (!nrst) begin // reset all register
             cnt_adc_ena <= 32'd0;
             cnt_adc_received <= 32'd0;
-            cnt_uart_send <= 32'd0;
             cnt_reset <= 32'd0;
-            cnt_uart_clk <= 32'd0;
             cnt_adc_ena_clk <= 8'd0;
+            cnt_uart_clk <= 32'd0;
             cnt_uart_wait <= 32'd0;
+            cnt_spi_send <= 32'd0;
 
             adc_rstn_reg <= 1'd1;         // low Level effective
             adc_calib_ena_reg <= 1'd0;
             adc_ena_reg <= 1'd0;
             adc_NOWA_reg <= 9'd0;
             
-            uart_wdata_reg <= 8'd0;
-            uart_wreq_reg <= 1'd0;
+            spi_wdata_reg <= 96'd0;
+            spi_wreq_reg <= 1'd0;
+            cnt_ad_times <= 16'd0;
 
             leds_reset <= 1'd0;
             leds_ena <= 1'd0;
@@ -222,19 +255,20 @@ module Giraffe_FSM #(
             if (!pll_locked) begin
                 cnt_adc_ena <= 32'd0;
                 cnt_adc_received <= 32'd0;
-                cnt_uart_send <= 32'd0;
                 cnt_reset <= 32'd0;
-                cnt_uart_clk <= 32'd0;
                 cnt_adc_ena_clk <= 8'd0;
+                cnt_uart_clk <= 32'd0;
                 cnt_uart_wait <= 32'd0;
+                cnt_spi_send <= 32'd0;
 
                 adc_rstn_reg <= 1'd1;         // low Level effective
                 adc_calib_ena_reg <= 1'd0;
                 adc_ena_reg <= 1'd0;
                 adc_NOWA_reg <= 9'd0;
                 
-                uart_wdata_reg <= 8'd0;
-                uart_wreq_reg <= 1'd0;
+                spi_wdata_reg <= 96'd0;
+                spi_wreq_reg <= 1'd0;
+                cnt_ad_times <= 16'd0;
 
                 leds_reset <= 1'd0;
                 leds_ena <= 1'd0;
@@ -246,19 +280,21 @@ module Giraffe_FSM #(
                     IDLE: begin
                         cnt_adc_ena <= 32'd0;
                         cnt_adc_received <= 32'd0;
-                        cnt_uart_send <= 32'd0;
                         cnt_reset <= 32'd0;
-                        cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
+                        cnt_uart_clk <= 32'd0;
                         cnt_uart_wait <= 32'd0;
+                        cnt_spi_send <= 32'd0;
 
                         adc_rstn_reg <= 1'd1;         // low Level effective
                         adc_calib_ena_reg <= 1'd0;
                         adc_ena_reg <= 1'd0;
                         adc_NOWA_reg <= 9'd0;
                         
-                        uart_wdata_reg <= 8'd0;
-                        uart_wreq_reg <= 1'd0;
+                        spi_wdata_reg <= 96'd0;
+                        spi_wreq_reg <= 1'd0;
+                        cnt_ad_times <= 16'd0;
+
 
                         leds_reset <= 1'd0;
                         leds_ena <= 1'd0;
@@ -277,7 +313,7 @@ module Giraffe_FSM #(
                     HOLD: begin
                         cnt_adc_ena <= 32'd0;
                         cnt_adc_received <= 32'd0;
-                        cnt_uart_send <= 32'd0;
+                        cnt_spi_send <= 32'd0;
                         cnt_reset <= 32'd0;
                         cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
@@ -287,8 +323,9 @@ module Giraffe_FSM #(
                         adc_ena_reg <= 1'd0;
                         adc_rstn_reg <= 1'd1;
 
-                        uart_wdata_reg <= 8'd0;
-                        uart_wreq_reg <= 1'd0;
+                        spi_wdata_reg <= 96'd0;
+                        spi_wreq_reg <= 1'd0;
+                        cnt_ad_times <= 16'd0;
 
                         leds_reset <= 1'd1;
                     end
@@ -323,15 +360,39 @@ module Giraffe_FSM #(
                         if (adc_trigger == 1) begin                 // Store and Dout of ADC
                             if (cnt_adc_received < memory_deepth_calib) begin
                                 cnt_adc_received <= cnt_adc_received + 32'd1;
-                                Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                // Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                spi_wdata_reg <= {spi_wdata_reg[89:0],adc_dout};
                                 leds_received <= 1'd1;
                             end
                             else begin
                                 cnt_adc_received <= cnt_adc_received;
                             end
+
+                            if (cnt_ad_times < 16'd15) begin
+                                cnt_ad_times <= cnt_ad_times + 16'd1;
+                                spi_wreq_reg <= 1'd0;
+                            end
+                            else begin
+                                cnt_ad_times <= 16'd0;
+                                spi_wreq_reg <= 1'd1;
+                            end
                         end
                         else begin
                             cnt_adc_received <= cnt_adc_received;
+                            spi_wreq_reg <= 1'd0;
+//                            cnt_ad_times <= 16'd0;
+                        end
+
+                        if (spi_csn_trigger == 1) begin
+                            if (cnt_spi_send < num_spi_sent_calib) begin
+                                cnt_spi_send <= cnt_spi_send + 32'd1;
+                            end
+                            else begin
+                                cnt_spi_send <= cnt_spi_send;
+                            end    
+                        end
+                        else begin
+                            cnt_spi_send <= cnt_spi_send;
                         end
                     end
 
@@ -361,82 +422,63 @@ module Giraffe_FSM #(
                         if (adc_trigger == 1) begin                 // Store and Dout of ADC
                             if (cnt_adc_received < memory_deepth) begin
                                 cnt_adc_received <= cnt_adc_received + 32'd1;
-                                Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                // Onchip_Memory[cnt_adc_received] <= {adc_dout};
+                                spi_wdata_reg <= {spi_wdata_reg[89:0],adc_dout};
                                 leds_received <= 1'd1;
                             end
                             else begin
                                 cnt_adc_received <= cnt_adc_received;
                             end
+
+                            if (cnt_ad_times < 16'd15) begin
+                                cnt_ad_times <= cnt_ad_times + 16'd1;
+                                spi_wreq_reg <= 1'd0;
+                            end
+                            else begin
+                                cnt_ad_times <= 16'd0;
+                                spi_wreq_reg <= 1'd1;
+                            end
                         end
                         else begin
                             cnt_adc_received <= cnt_adc_received;
+                            spi_wreq_reg <= 1'd0;
+//                            cnt_ad_times <= 16'd0;
                         end
-                    end
 
-                    SENDC: begin
-                        if (cnt_uart_send < memory_deepth_calib) begin
-                            // case (cnt_uart_clk) 
-                            //     uart_period*11: begin
-                            //         uart_wdata_reg <= {2'b11, Onchip_Memory[cnt_uart_send]};
-                            //         uart_wreq_reg <= 1'd0;
-                            //         cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                            //     end
-                            //     uart_period*12: begin
-                            //         uart_wreq_reg <= 1'd1;
-                            //         cnt_uart_send <= cnt_uart_send + 32'd1;
-                            //         cnt_uart_clk <= 32'd0;
-                            //     end
-                            //     default: begin
-                            //         cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                            //         uart_wreq_reg <= 1'd0;
-                            //     end
-                            // endcase
-                            if (cnt_uart_clk == uart_period * 11) begin
-                                uart_wdata_reg <= {2'b00, Onchip_Memory[cnt_uart_send]};
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
-                            end else if (cnt_uart_clk == uart_period * 12) begin
-                                uart_wreq_reg <= 1'd1;
-                                cnt_uart_send <= cnt_uart_send + 32'd1;
-                                cnt_uart_clk <= 32'd0;
-                            end else begin
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
+                        if (spi_csn_trigger == 1) begin
+                            if (cnt_spi_send < num_spi_sent) begin
+                                cnt_spi_send <= cnt_spi_send + 32'd1;
                             end
-                            leds_received <= 1'd0;
+                            else begin
+                                cnt_spi_send <= cnt_spi_send;
+                            end    
                         end
                         else begin
-                            uart_wreq_reg <= 1'd0;
-                            uart_wdata_reg <= uart_wdata_reg;
-                            cnt_uart_clk <= cnt_uart_clk;
-                            cnt_uart_send <= cnt_uart_send;
-                            leds_received <= 1'd1;
+                            cnt_spi_send <= cnt_spi_send;
                         end
                     end
-                    
-                    SENDS: begin
-                        if (cnt_uart_send < memory_deepth) begin
-                            if (cnt_uart_clk == uart_period * 11) begin
-                                uart_wdata_reg <= {2'b00, Onchip_Memory[cnt_uart_send]};
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
-                            end else if (cnt_uart_clk == uart_period * 12) begin
-                                uart_wreq_reg <= 1'd1;
-                                cnt_uart_send <= cnt_uart_send + 32'd1;
-                                cnt_uart_clk <= 32'd0;
-                            end else begin
-                                cnt_uart_clk <= cnt_uart_clk + 32'd1;
-                                uart_wreq_reg <= 1'd0;
-                            end
-                            leds_uart <= 1'd0;
-                        end
-                        else begin
-                            uart_wreq_reg <= 1'd0;
-                            uart_wdata_reg <= uart_wdata_reg;
-                            cnt_uart_clk <= cnt_uart_clk;
-                            cnt_uart_send <= cnt_uart_send;
-                            leds_uart <= 1'd1;
-                        end
+                    default: begin
+                        cnt_adc_ena <= 32'd0;
+                        cnt_adc_received <= 32'd0;
+                        cnt_reset <= 32'd0;
+                        cnt_adc_ena_clk <= 8'd0;
+                        cnt_uart_clk <= 32'd0;
+                        cnt_uart_wait <= 32'd0;
+                        cnt_spi_send <= 32'd0;
+
+                        adc_rstn_reg <= 1'd1;         // low Level effective
+                        adc_calib_ena_reg <= 1'd0;
+                        adc_ena_reg <= 1'd0;
+                        adc_NOWA_reg <= 9'd0;
+                        
+                        spi_wdata_reg <= 96'd0;
+                        spi_wreq_reg <= 1'd0;
+                        cnt_ad_times <= 16'd0;
+
+                        leds_reset <= 1'd0;
+                        leds_ena <= 1'd0;
+                        leds_received <= 1'd0;
+                        leds_uart <= 1'd0;
                     end
                 endcase
             end
@@ -460,7 +502,9 @@ module Giraffe_FSM #(
     assign  adc_NOWA            =   adc_NOWA_reg;
 
     //  communicating with UART
-    assign  uart_wdata          =   uart_wdata_reg;
-    assign  uart_wreq           =   uart_wreq_reg;
+    // assign  uart_wdata          =   uart_wdata_reg;
+    // assign  uart_wreq           =   uart_wreq_reg;
+    assign spi_wreq             =   spi_wreq_reg;
+    assign spi_wdata            =   spi_wdata_reg;
 
 endmodule
