@@ -68,7 +68,7 @@ module Giraffe_FSM #(
     reg [31:0]  cnt_adc_received;
     reg [31:0]  cnt_reset;
     reg [7:0]   cnt_adc_ena_clk;
-    reg [31:0]  cnt_uart_clk;
+//    reg [31:0]  cnt_uart_clk;
     reg [31:0]  cnt_uart_wait;
     // reg [31:0]  cnt_uart_send;
     reg [31:0]  cnt_spi_send;
@@ -81,6 +81,8 @@ module Giraffe_FSM #(
     // reg [UART_NUM_DATA-1:0] uart_wdata_reg;
     // reg uart_wreq_reg;   
     reg [SPI_BIT_LENGTH-1:0] spi_wdata_reg;
+//	 reg [SPI_BIT_LENGTH-1:0] spi_wdata_buffer;
+
     reg spi_wreq_reg;
 
 
@@ -104,6 +106,8 @@ module Giraffe_FSM #(
         .uart_vld           (uart_vld),
         .cmdout             (uart_rx_cmdout)
     );
+	 
+	 wire spi_csn_trigger;
 
 // ********************* Trigger Settup *********************
     RiseEdgeTrigger Inst_RiseEdgeTrigger (
@@ -232,7 +236,7 @@ module Giraffe_FSM #(
             cnt_adc_received <= 32'd0;
             cnt_reset <= 32'd0;
             cnt_adc_ena_clk <= 8'd0;
-            cnt_uart_clk <= 32'd0;
+//            cnt_uart_clk <= 32'd0;
             cnt_uart_wait <= 32'd0;
             cnt_spi_send <= 32'd0;
 
@@ -257,7 +261,7 @@ module Giraffe_FSM #(
                 cnt_adc_received <= 32'd0;
                 cnt_reset <= 32'd0;
                 cnt_adc_ena_clk <= 8'd0;
-                cnt_uart_clk <= 32'd0;
+//                cnt_uart_clk <= 32'd0;
                 cnt_uart_wait <= 32'd0;
                 cnt_spi_send <= 32'd0;
 
@@ -267,6 +271,7 @@ module Giraffe_FSM #(
                 adc_NOWA_reg <= 9'd0;
                 
                 spi_wdata_reg <= 96'd0;
+//					 spi_wdata_buffer <= 96'd0;
                 spi_wreq_reg <= 1'd0;
                 cnt_ad_times <= 16'd0;
 
@@ -282,7 +287,7 @@ module Giraffe_FSM #(
                         cnt_adc_received <= 32'd0;
                         cnt_reset <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
-                        cnt_uart_clk <= 32'd0;
+//                        cnt_uart_clk <= 32'd0;
                         cnt_uart_wait <= 32'd0;
                         cnt_spi_send <= 32'd0;
 
@@ -292,6 +297,7 @@ module Giraffe_FSM #(
                         adc_NOWA_reg <= 9'd0;
                         
                         spi_wdata_reg <= 96'd0;
+//								spi_wdata_buffer <= 96'd0;
                         spi_wreq_reg <= 1'd0;
                         cnt_ad_times <= 16'd0;
 
@@ -315,7 +321,7 @@ module Giraffe_FSM #(
                         cnt_adc_received <= 32'd0;
                         cnt_spi_send <= 32'd0;
                         cnt_reset <= 32'd0;
-                        cnt_uart_clk <= 32'd0;
+//                        cnt_uart_clk <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
                         cnt_uart_wait <= 32'd0;
         
@@ -324,6 +330,7 @@ module Giraffe_FSM #(
                         adc_rstn_reg <= 1'd1;
 
                         spi_wdata_reg <= 96'd0;
+//								spi_wdata_buffer <= 96'd0;
                         spi_wreq_reg <= 1'd0;
                         cnt_ad_times <= 16'd0;
 
@@ -362,19 +369,21 @@ module Giraffe_FSM #(
                                 cnt_adc_received <= cnt_adc_received + 32'd1;
                                 // Onchip_Memory[cnt_adc_received] <= {adc_dout};
                                 spi_wdata_reg <= {spi_wdata_reg[89:0],adc_dout};
+//										  spi_wdata_reg <= {adc_dout, spi_wdata_reg[95:6]};
+
                                 leds_received <= 1'd1;
                             end
                             else begin
                                 cnt_adc_received <= cnt_adc_received;
                             end
 
-                            if (cnt_ad_times < 16'd15) begin
-                                cnt_ad_times <= cnt_ad_times + 16'd1;
-                                spi_wreq_reg <= 1'd0;
-                            end
-                            else begin
+                            if (cnt_ad_times == 16'd15) begin
                                 cnt_ad_times <= 16'd0;
                                 spi_wreq_reg <= 1'd1;
+                            end
+                            else begin
+                                cnt_ad_times <= cnt_ad_times + 16'd1;
+                                spi_wreq_reg <= 1'd0;
                             end
                         end
                         else begin
@@ -424,19 +433,20 @@ module Giraffe_FSM #(
                                 cnt_adc_received <= cnt_adc_received + 32'd1;
                                 // Onchip_Memory[cnt_adc_received] <= {adc_dout};
                                 spi_wdata_reg <= {spi_wdata_reg[89:0],adc_dout};
+//										  spi_wdata_reg <= {adc_dout, spi_wdata_reg[95:6]};
                                 leds_received <= 1'd1;
                             end
                             else begin
                                 cnt_adc_received <= cnt_adc_received;
                             end
 
-                            if (cnt_ad_times < 16'd15) begin
-                                cnt_ad_times <= cnt_ad_times + 16'd1;
-                                spi_wreq_reg <= 1'd0;
-                            end
-                            else begin
+                            if (cnt_ad_times == 16'd15) begin
                                 cnt_ad_times <= 16'd0;
                                 spi_wreq_reg <= 1'd1;
+                            end
+                            else begin
+                                cnt_ad_times <= cnt_ad_times + 16'd1;
+                                spi_wreq_reg <= 1'd0;
                             end
                         end
                         else begin
@@ -462,7 +472,7 @@ module Giraffe_FSM #(
                         cnt_adc_received <= 32'd0;
                         cnt_reset <= 32'd0;
                         cnt_adc_ena_clk <= 8'd0;
-                        cnt_uart_clk <= 32'd0;
+//                        cnt_uart_clk <= 32'd0;
                         cnt_uart_wait <= 32'd0;
                         cnt_spi_send <= 32'd0;
 
@@ -473,6 +483,7 @@ module Giraffe_FSM #(
                         
                         spi_wdata_reg <= 96'd0;
                         spi_wreq_reg <= 1'd0;
+//								spi_wdata_buffer <= 96'd0;
                         cnt_ad_times <= 16'd0;
 
                         leds_reset <= 1'd0;
@@ -486,12 +497,18 @@ module Giraffe_FSM #(
     end 
 
 
-
+	reg	spi_wreq_reg_ff;
+	always @(posedge clk or negedge nrst) begin
+		if (!nrst) 
+			spi_wreq_reg_ff <= 1'd0;
+		else
+			spi_wreq_reg_ff <= spi_wreq_reg;
+	end
 
 
 // ********************* Output Assigments *********************
     //  LED Display assignments  //FIXME
-    assign  LED_cnt_adc_received    =   cnt_adc_received;
+    assign  LED_cnt_adc_received    =   cnt_adc_received[17:0];
     assign  LED_state           =   cs;
     assign  LED_out             =   {leds_reset, leds_uart, leds_received, leds_ena};  
     
@@ -504,7 +521,7 @@ module Giraffe_FSM #(
     //  communicating with UART
     // assign  uart_wdata          =   uart_wdata_reg;
     // assign  uart_wreq           =   uart_wreq_reg;
-    assign spi_wreq             =   spi_wreq_reg;
+    assign spi_wreq             =   spi_wreq_reg_ff;
     assign spi_wdata            =   spi_wdata_reg;
 
 endmodule

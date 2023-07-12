@@ -90,7 +90,7 @@ module SPI_Controller_Master #(
                     //        ns = PRE_SEND;
                     //    else
                     //        ns = HOLD;
-                        ns = Wait;
+                        ns = HOLD;
                     end
                     else
                         ns = SEND;

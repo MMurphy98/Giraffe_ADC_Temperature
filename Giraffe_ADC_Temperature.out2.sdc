@@ -19,7 +19,7 @@
 ## PROGRAM "Quartus Prime"
 ## VERSION "Version 18.1.0 Build 625 09/12/2018 SJ Standard Edition"
 
-## DATE    "Tue Jul 11 15:31:55 2023"
+## DATE    "Mon Jul 10 23:18:57 2023"
 
 ##
 ## DEVICE  "EP4CE115F29C7"
@@ -45,7 +45,7 @@ create_clock -name {clk_50M} -period 20.000 -waveform { 0.000 10.000 } [get_port
 # Create Generated Clock
 #**************************************************************
 
-create_generated_clock -name {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 1 -divide_by 1 -master_clock {clk_50M} [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 1 -master_clock {clk_50M} [get_pins {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] 
 
 
 #**************************************************************
@@ -58,10 +58,6 @@ create_generated_clock -name {Inst_PLL|altpll_component|auto_generated|pll1|clk[
 # Set Clock Uncertainty
 #**************************************************************
 
-set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
 
 
 #**************************************************************
@@ -137,7 +133,6 @@ set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_
 set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {spi_sclk}]
 set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_calib_ena}]
 set_output_delay -add_delay  -clock [get_clocks {Inst_PLL|altpll_component|auto_generated|pll1|clk[0]}]  1.000 [get_ports {adc_rstn}]
-
 
 
 #**************************************************************

@@ -11,7 +11,7 @@ module Giraffe #(
 
     // Number of Sampled Points
     parameter NUM_Sampled = 102400,
-    parameter NUM_Calibration = 1000,
+    parameter NUM_Calibration = 102400,
     parameter SPI_N_BIT = 96
 )
 (
@@ -50,19 +50,20 @@ module Giraffe #(
 );
 
 	wire sys_locked;
-	wire clk_uart;
+//	wire clk_uart;
 //	wire uart_wreq, uart_rdy;
 	wire [UART_NUM_DATA-1:0] uart_rdata;
 	wire spi_wreq;
 	wire [SPI_N_BIT-1:0] spi_wdata;
 	
+	wire uart_vld;
 // ****************** Clock Buffer of the whole system ******************
     PLL_50M Inst_PLL (
         .areset                 (~nrst),
         .locked                 (sys_locked),
         .inclk0                 (clk_50M),
-        .c0                     (clk_adc),      // 50MHz
-        .c1					    (clk_uart)      // 50MHz
+        .c0                     (clk_adc)      // 50MHz
+//        .c1					    (clk_uart)      // 50MHz
     );
 
 
@@ -107,7 +108,7 @@ module Giraffe #(
 		.N_stop                 (UART_NUM_STOP)
     )
 	Inst_uart_rx (
-        .clk                    (clk_uart),
+        .clk                    (clk_adc),
         .nrst                   (nrst),
         .rx                     (rxfM),
         .rdata                  (uart_rdata),

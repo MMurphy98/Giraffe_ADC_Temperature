@@ -18,8 +18,6 @@ module uart_rx
     );
 
     localparam T = FREQ / BAUDRATE;
-	 wire end_cnt_clk;
-	 wire end_cnt_bit;
 
 	reg [7:0] rdata_reg;
 	reg vld_reg;
