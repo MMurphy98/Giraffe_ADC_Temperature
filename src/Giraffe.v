@@ -10,7 +10,7 @@ module Giraffe #(
     parameter NUM_bit = 6,
 
     // Number of Sampled Points
-    parameter NUM_Sampled = 102400,
+    parameter NUM_Sampled = 125000,
     parameter NUM_Calibration = 1000
 )
 (
